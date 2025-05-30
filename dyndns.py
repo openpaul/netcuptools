@@ -296,7 +296,14 @@ if __name__ == "__main__":
     for fqdn in args.fqdns:
         try:
             hostname, domain = extract_hostname_and_domain(fqdn)
-            records.append(DomainRecord(fqdn=fqdn, domain=domain, hostname=hostname))
+            records.append(
+                DomainRecord(
+                    fqdn=fqdn,
+                    domain=domain,
+                    hostname=hostname,
+                    record_type="AAAA" if args.ipv6 else "A",
+                )
+            )
         except ValueError as e:
             logger.error(e)
     if not records:
