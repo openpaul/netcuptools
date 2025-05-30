@@ -249,5 +249,6 @@ if __name__ == "__main__":
     if not records:
         logger.error("No valid domains to update. Exiting.")
         raise SystemExit(1)
+    logger.info(f"Prepared {len(records)} records for update")
     ddns = NetcupDynDNS(creds, records)
     ddns.run()
