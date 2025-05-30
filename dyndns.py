@@ -36,20 +36,40 @@ class DomainRecord:
     priority: int = 10
 
 
+def getIPAddress(ip6: bool = False) -> str | None:
+    if ip6:
+        url = "https://ipv6.wtfismyip.com/json"
+    else:
+        url = "https://ipv4.wtfismyip.com/json"
+    try:
+        response = requests.get(url, timeout=10)
+        response.raise_for_status()
+        data = response.json()
+    except requests.RequestException as e:
+        logger.error(f"Failed to fetch data from {url}: {e}")
+        raise SystemExit(1)
+
+    return data.get("YourFuckingIPAddress", None)
+
+
 class NetcupDynDNS:
     API_URL = "https://ccp.netcup.net/run/webservice/servers/endpoint.php?JSON"
 
-    def __init__(self, creds: NetcupCredentials, records: List[DomainRecord]):
+    def __init__(
+        self, creds: NetcupCredentials, records: List[DomainRecord], ip6: bool = False
+    ):
         self.creds = creds
         self.records = records
         self.session_id: Optional[str] = None
         self.dns_records_cache: dict[str, List[dict]] = {}
+        self.ip6 = ip6
 
     def get_public_ip(self) -> str:
         logger.debug("Fetching public IP")
-        r = requests.get("https://wtfismyip.com/text", timeout=10)
-        r.raise_for_status()
-        ip = r.text.strip()
+        ip = getIPAddress(ip6=self.ip6)
+        if ip is None:
+            logger.error("Failed to retrieve public IP address")
+            raise SystemExit(1)
         logger.info(f"Current public IP: {ip}")
         return ip
 
@@ -74,7 +94,15 @@ class NetcupDynDNS:
         }
         r = requests.post(self.API_URL, json=data)
         r.raise_for_status()
-        self.session_id = r.json()["responsedata"]["apisessionid"]
+        data = r.json()
+        if data["status"] == "error":
+            logger.error(f"Login failed: {data['longmessage']}")
+            raise SystemExit(1)
+        try:
+            self.session_id = data["responsedata"]["apisessionid"]
+        except KeyError:
+            logger.error(f"Login failed: Invalid API response: {data}")
+            raise SystemExit(1)
         logger.info("Login successful")
 
     def logout(self) -> None:
@@ -155,7 +183,7 @@ class NetcupDynDNS:
             f"DNS record {record.hostname}.{record.domain} updated successfully"
         )
 
-    def run(self) -> None:
+    def run(self, dry_run: bool = False) -> None:
         try:
             current_ip = self.get_public_ip()
             self.login()
@@ -164,11 +192,21 @@ class NetcupDynDNS:
                 if dns_ip == current_ip:
                     logger.info(f"{record.fqdn} IP is up-to-date ({current_ip})")
                     continue
+                else:
+                    logger.debug(
+                        f"{record.fqdn} IP mismatch: DNS {dns_ip}, current {current_ip}"
+                    )
                 record_id = self.get_dns_record_id(
                     record.domain, record.hostname, record.record_type
                 )
                 if record_id is not None:
-                    self.update_dns_record(record, record_id, current_ip)
+                    if dry_run:
+                        logger.info(
+                            f"Dry run: Would update {record.fqdn} to {current_ip}"
+                        )
+                    else:
+                        logger.debug(f"Updating DNS record for {record.fqdn}")
+                        self.update_dns_record(record, record_id, current_ip)
                 else:
                     logger.error(
                         f"Skipping update: DNS record ID not found for {record.fqdn}"
@@ -177,6 +215,7 @@ class NetcupDynDNS:
             logger.error(f"HTTP error occurred: {e}")
         except Exception as e:
             logger.error(f"Unexpected error: {e}")
+            raise e
         finally:
             self.logout()
 
@@ -201,6 +240,20 @@ def parse_args():
         nargs="+",
         required=True,
         help="List of domains or subdomains (FQDNs)",
+    )
+    parser.add_argument(
+        "-n",
+        "--dry-run",
+        action="store_true",
+        help="Perform a dry run without making changes",
+        default=False,
+    )
+    parser.add_argument(
+        "-6",
+        "--ipv6",
+        action="store_true",
+        help="Use IPv6 as the public IP source",
+        default=False,
     )
     parser.add_argument(
         "-v",
@@ -250,5 +303,5 @@ if __name__ == "__main__":
         logger.error("No valid domains to update. Exiting.")
         raise SystemExit(1)
     logger.info(f"Prepared {len(records)} records for update")
-    ddns = NetcupDynDNS(creds, records)
-    ddns.run()
+    ddns = NetcupDynDNS(creds, records, ip6=args.ipv6)
+    ddns.run(dry_run=args.dry_run)
