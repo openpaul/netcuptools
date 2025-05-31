@@ -56,7 +56,7 @@ Then configure the enviroment variables in the file `systemd/netcup-dyndns.env`.
 
 Enable the systemd config by running `bash systemd/install_netcup_systemd.sh`.
 
-Then the service should be running.
+Then the service should be running peridocially. Set the repeat time yourself in `systemd/netcup-dyndns.timer`.
 
 ### imapsync.py
 
