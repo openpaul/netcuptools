@@ -44,6 +44,20 @@ export NETCUP_APIPASSWORD="..."
 export NETCUP_CUSTOMERNUMBER="..."
 ```
 
+#### As systemd service
+
+Clone the repo into a folder and then update the file `systemd/netcup-dyndns.service` with the path to the script by changing this line:
+
+```txt
+ExecStart=/path/to/netcup_dyndns.py -d ${FQDNS}
+```
+
+Then configure the enviroment variables in the file `systemd/netcup-dyndns.env`.
+
+Enable the systemd config by running `bash systemd/install_netcup_systemd.sh`.
+
+Then the service should be running.
+
 ### imapsync.py
 
 Sync one or multiple mailboxes using imapsync. Supports docker so you don't need to install perl.
