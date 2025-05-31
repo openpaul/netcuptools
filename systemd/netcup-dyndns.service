@@ -1,0 +1,13 @@
+[Unit]
+Description=Netcup DynDNS Updater
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+EnvironmentFile=/etc/netcup-dyndns.env
+ExecStart=/path/to/netcup_dyndns.py -d ${FQDNS}
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
