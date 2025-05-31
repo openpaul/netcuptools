@@ -1,4 +1,4 @@
-# Infra Utility Scripts
+# Netcup Utility Scripts
 
 Simple Python CLI scripts for DNS updates and mailbox syncing. Built for automation using `uv`, `loguru`, and standard Python tooling.
 
