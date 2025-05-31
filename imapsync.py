@@ -6,7 +6,7 @@
 #   "loguru",
 # ]
 # [tool.uv]
-# exclude-newer = "2023-10-16T00:00:00Z"
+# exclude-newer = "2025-05-16T00:00:00Z"
 # ///
 
 import argparse
