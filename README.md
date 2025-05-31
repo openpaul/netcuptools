@@ -1,16 +1,18 @@
 # Infra Utility Scripts
 
-Lightweight Python CLI tools for DNS updates and mailbox syncing. Built for automation using `uv`, `loguru`, and standard Python tooling.
+Simple Python CLI scripts for DNS updates and mailbox syncing. Built for automation using `uv`, `loguru`, and standard Python tooling.
 
 ## Structure
 
 ```txt
 .
 ├── configs/
+│ ├── ....
 │ └── emailsexample.csv # Example config file for imapsync
 └── scripts/
-├── dyndns.py # Dynamic DNS updater for Netcup API
-└── imapsync.py # IMAP inbox migration via imapsync
+  ├── dyndns.py
+  ├── ....
+  └── imapsync.py
 ```
 
 ## Requirements
@@ -34,7 +36,7 @@ Update DNS A/AAAA records via Netcup's API.
 ./scripts/dyndns.py --help
 ```
 
-### Environment variables
+#### Environment variables
 
 ```bash
 export NETCUP_APIKEY="..."
@@ -44,8 +46,9 @@ export NETCUP_CUSTOMERNUMBER="..."
 
 ### imapsync.py
 
-Sync one or multiple mailboxes using imapsync.
-Usage
+Sync one or multiple mailboxes using imapsync. Supports docker so you don't need to install perl.
+
+#### Usage
 
 ```sh
 ./scripts/imapsync.py --help
