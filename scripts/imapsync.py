@@ -10,15 +10,14 @@
 # ///
 
 import argparse
+import shutil
 import subprocess
 from dataclasses import dataclass
-from loguru import logger
-import polars as pl
-from typing import List
-import argparse
-import shutil
 from functools import partial
-import os
+from typing import List
+
+import polars as pl
+from loguru import logger
 
 
 def verify_dependencies(use_docker: bool):

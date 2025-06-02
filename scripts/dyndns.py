@@ -12,9 +12,9 @@
 import argparse
 import os
 import socket
-from dataclasses import dataclass
 import sys
-from typing import Optional, List, Tuple
+from dataclasses import dataclass
+from typing import List, Optional, Tuple
 
 import requests
 from loguru import logger
@@ -188,6 +188,10 @@ class NetcupDynDNS:
             current_ip = self.get_public_ip()
             self.login()
             for record in self.records:
+                if " " in record.fqdn:
+                    logger.error(f"Invalid FQDN with spaces: {record.fqdn}")
+                    continue
+
                 dns_ip = self.resolve_dns_ip(record.fqdn)
                 if dns_ip == current_ip:
                     logger.info(f"{record.fqdn} IP is up-to-date ({current_ip})")
@@ -293,7 +297,11 @@ if __name__ == "__main__":
 
     creds = get_env_credentials()
     records = []
-    for fqdn in args.fqdns:
+    fqdns = args.fqdns
+    parsed_fqdns = []
+    for fqdn in fqdns:
+        parsed_fqdns.extend(fqdn.split())
+    for fqdn in parsed_fqdns:
         try:
             hostname, domain = extract_hostname_and_domain(fqdn)
             records.append(
